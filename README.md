@@ -29,7 +29,9 @@ HR2Day is an HR System and provides a set of REST API's that allow you to progra
 
 ## Getting started
 
-The _HelloID-Conn-Prov-Source-HR2Day_ connector is created for both Windows PowerShell 5.1 and PowerShell Core. This means that the connector can be executed in both cloud and on-premises using the HelloID agent.
+The _HelloID-Conn-Prov-Source-HR2Day_ connector is created for both Windows PowerShell 5.1 and PowerShell Core. This means that the connector can be executed in both cloud and on-premises using the HelloID agent. 
+
+> By default, the connector is only suitable to be executed using the cloud. 
 
 > If you want to execute the connector using the HelloID agent, please check section: [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
 

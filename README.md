@@ -1,5 +1,4 @@
 # HelloID-Conn-Prov-Source-HR2Day
-### Work-In-Progress
 
 <p align="center">
   <img src="https://www.hr2day.com/wp-content/uploads/2019/10/cropped-RGB_hr2day_logo.png">
@@ -11,6 +10,7 @@
 - [Getting started](#Getting-started)
   + [Connection settings](#Connection-settings)
   + [Prerequisites](#Prerequisites)
+  + [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
   + [Remarks](#Remarks)
   + [Contents](#Contents)
 - [Setup the connector](Setup-The-Connector)
@@ -21,51 +21,101 @@
 
 HR2Day is an HR System and provides a set of REST API's that allow you to programmatically interact with it's data. The HelloID connector uses the API endpoints in the table below.
 
-| Endpoint     | Description |
+| Endpoint | Description |
 | ------------ | ----------- |
-| /Emloyee     | Contains the employee information            |
-| /Arbeidsrelatie    | Contains the information about employments. Employees can have multiple 'arbeidsrelaties'.            |
-| /Department | * Currently not being used since the demo enviroment does not contain departments                |
-| /CostCenter | * Currently not being used since the demo enviroment does not contain costcenters                |
-| /Jobs | * Currently not being used since the demo enviroment does not contain jobs            |
-
-> This connector is built on a demo environment that doesn't contain information other than employee(s) and arbeidsrelatie(s). Therefore, this connector has not been finished and the _Departments.ps1_ script hasn't been written as of yet.
+| /Emloyee | Contains the employee information. |
+| /Arbeidsrelatie | Contains the information about employments. Employees can have multiple 'arbeidsrelaties'. |
+| /Department | Contains the information about departments and managers. |
 
 ## Getting started
 
-The _HelloID-Conn-Prov-Source-HR2Day_ connector is built for both Windows PowerShell 5.1 and PowerShell Core 7. This means the connector can be executed using the _On-Premises_ HelloID agent as well as in the cloud.
+The _HelloID-Conn-Prov-Source-HR2Day_ connector is created for both Windows PowerShell 5.1 and PowerShell Core. This means that the connector can be executed in both cloud and on-premises using the HelloID agent.
+
+> If you want to execute the connector using the HelloID agent, please check section: [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
 
 ### Connection settings
 
 The following settings are required to connect to the API.
 
-| Setting     | Description |
-| ------------ | ----------- |
-| ApiKey     | The consumer key. This will be provided by HR2Day          |
-| ApiSecret    | The consumer secret. This will be provided by HR2Day          |
-| UserName | The username to connect to the API |
-| Password | The password belonging to the username |
-| Werkgever | The name of the 'werkgever' or 'employer'. This the name of the employer in HR2Day |
-| Beveiligingstoken | The security token. This will be provided by HR2Day |
-
-> Optional is abbilty to toggle TLS1.2. This is only necessary when running the connector in the cloud.
+| Setting     | Description | Mandatory |
+| ------------ | ----------- | ----------- |
+| ApiKey | The consumer key. This will be provided by HR2Day | Yes |
+| ApiSecret | The consumer secret. This will be provided by HR2Day | Yes |
+| UserName | The username to connect to the API | Yes |
+| Password | The password belonging to the username | Yes |
+| WG_Employees | The name of the 'werkgever' or 'employer' for the employees in HR2Day | Yes |
+| WG_Deparments | The name of the 'werkgever' or 'employer' for the departments in HR2Day | Yes |
+| Enable TLS1.2 | Enables TLS 1.2 | No |
 
 ### Prerequisites
 
-- Make sure to have gathered all necessary connection settings
+- [ ] Make sure to have gathered all necessary connection settings
+
+- [ ] The values for __WG_Departments__ and __WG_Employees__
+
+#### When using the connector in conjunction with the HelloID agent
+
+- [ ] The PSHR2DayAuth module files. Download from: https://github.com/Tools4everBV/HelloID-Conn-Prov-Source-HR2Day/tree/main/PSHR2DayAuth/bin
+
+- [ ] Windows PowerShell 5.1 installed on the server where the 'HelloID agent and provisioning agent' are running. Download from: https://www.microsoft.com/en-us/download/details.aspx?id=54616
+
+- [ ] .NET 4.7.2 (or higher) installed on the server where the 'HelloID agent and provisioning agent' are running. Download from: https://dotnet.microsoft.com/download/dotnet-framework/net472
+
+- [ ] Adjust the PowerShell code for both _persons.ps1_ and _departments.ps1_. See section [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
+
+### Execute the connector using the HelloID Agent
+
+1. Download all the files from the repository https://github.com/Tools4everBV/HelloID-Conn-Prov-Source-HR2Day/tree/main/PSHR2DayAuth/bin/
+2. Copy the files to a sensible location.
+3. Open the _persons.ps1_ and _departments.ps1_ files
+4. Go to the _Get-HR(Employee/Department)Data_ function
+5. Add the folowing line within the _try_ block on line 40
+
+```powershell
+Import-Module _[c:\temp\PSHR2DayAuth.dll]_ -Force
+```
+6. Make sure to adjust the path _[c:\temp\PSHR2DayAuth.dll]_ and use the folder in where the PSHR2DayAuth files are saved.
+7. Replace the following lines:
+
+```powershell
+$form = @{
+    grant_type    = 'password'
+    username      = $UserName
+    client_id     = $ClientID
+    client_secret = $clientSecret
+    password      = $Password
+}
+# 'Invoke-RestMethod -Form' is only available on PowerShell Core.
+$accessToken = Invoke-RestMethod -Uri $Uri -Method Post -Form $form
+```
+
+Replace with:
+
+```powershell
+$splatTokenParams = @{
+    UserName     = $UserName
+    Password     = $Password
+    ClientID     = $ClientID
+    ClientSecret = $ClientSecret
+}
+$response = Get-HR2DayAccessToken @splatTokenParams
+$accessToken = $response | ConvertFrom-Json
+```
 
 ### Remarks
 
-> This connector is built upon a demo environment that doesn't contain information other than employee(s) and arbeidsrelatie(s). Therefore, this connector has not been finished and the _Departments.ps1_ script hasn't been writting as of yet.
+- When using the connector on Windows PowerShell 5.1 / The HelloID agent, you will need the PSModule DLL file to authenticate against HR2Day. Please not that the code will have to be changed in order to run on Windows PowerShell 5.1. See section [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
 
-The data in HR2Day must be retrieved using multiple queries/endpoints. For an overview of endpoints, please refer to the [Introduction](#Introduction) section of this document.
+> Enabling TLS 1.2 is not necessary when running the connector in the cloud
 
 ### Contents
 
 | Files       | Description                                |
 | ----------- | ------------------------------------------ |
 | Configuration.json | The configuration settings for the connector |
-| Persons.ps1 | Retrieves the person and contract data     |
+| Persons.ps1 | Retrieves the person and contract data |
+| Departments.ps1 | Retrieves the department data |
+| Mapping.json | A basic mapping for both persons and contracts |
 
 ## Setup the connector
 

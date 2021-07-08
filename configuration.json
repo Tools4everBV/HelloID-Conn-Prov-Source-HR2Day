@@ -1,0 +1,74 @@
+[
+  {
+    "key": "ClientID",
+    "type": "input",
+    "defaultValue": "",
+    "templateOptions": {
+      "label": "ClientID",
+      "description": "The ClientID to connect to the API ",
+      "required": true
+    }
+  },
+  {
+    "key": "ClientSecret",
+    "type": "input",
+    "defaultValue": "",
+    "templateOptions": {
+      "type": "password",
+      "label": "ClientSecret",
+      "description": "The ClientSecret to connect to the API ",
+      "required": true
+    }
+  },
+  {
+    "key": "UserName",
+    "type": "input",
+    "defaultValue": "",
+    "templateOptions": {
+      "label": "UserName",
+      "description": "The UserName to connect to the API ",
+      "required": true
+    }
+  },
+    {
+    "key": "Password",
+    "type": "input",
+    "defaultValue": "",
+    "templateOptions": {
+      "type": "password",
+      "label": "Password",
+      "description": "The password belonging to the UserName",
+      "required": true
+    }
+  },
+  {
+    "key": "WG_Employees",
+    "type": "input",
+    "defaultValue": "",
+    "templateOptions": {
+      "label": "WG_Employees",
+      "description": "The name of the 'werkgever' or 'employer' for the employees.",
+      "required": true
+    }
+  },
+  {
+    "key": "WG_Departments",
+    "type": "input",
+    "defaultValue": "",
+    "templateOptions": {
+      "label": "WG_Departments",
+      "description": "The name of the 'werkgever' or 'employer' for the deparments and functions.",
+      "required": true
+    }
+  },
+  {
+    "key": "IsConnectionTls12",
+    "type": "checkbox",
+    "defaultValue": true,
+    "templateOptions": {
+      "label": "Enable TLS1.2",
+      "description": "Enables TLS 1.2. Note that is not necessary when running the connector in the cloud",
+      "required": false
+    }
+  }
+]

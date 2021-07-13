@@ -88,7 +88,7 @@ $form = @{
     password      = $Password
 }
 # 'Invoke-RestMethod -Form' is only available on PowerShell Core.
-$accessToken = Invoke-RestMethod -Uri $Uri -Method Post -Form $form
+$accessToken = Invoke-RestMethod -Uri 'https://login.salesforce.com/services/oauth2/token' -Method Post -Form $form
 ```
 
 Replace with:

@@ -48,7 +48,7 @@ function Get-HR2DayEmployeeData {
             client_secret = $clientSecret
             password      = $Password
         }
-        $accessToken = Invoke-RestMethod -Uri $Uri -Method Post -Form $form
+        $accessToken = Invoke-RestMethod -Uri 'https://login.salesforce.com/services/oauth2/token' -Method Post -Form $form
 
         Write-Verbose 'Adding Authorization headers'
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"

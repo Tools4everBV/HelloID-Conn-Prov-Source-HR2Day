@@ -41,7 +41,6 @@ function Get-HR2DayDepartmentData {
 
         Write-Verbose "Invoking command '$($MyInvocation.MyCommand)'"
         Write-Verbose 'Retrieving HR2Day AccessToken'
-        $uri = 'https://login.salesforce.com/services/oauth2/token'
         $form = @{
             grant_type    = 'password'
             username      = $UserName
@@ -49,7 +48,7 @@ function Get-HR2DayDepartmentData {
             client_secret = $clientSecret
             password      = $Password
         }
-        $accessToken = Invoke-RestMethod -Uri $Uri -Method Post -Form $form
+        $accessToken = Invoke-RestMethod -Uri 'https://login.salesforce.com/services/oauth2/token' -Method Post -Form $form
 
         Write-Verbose 'Adding Authorization headers'
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"

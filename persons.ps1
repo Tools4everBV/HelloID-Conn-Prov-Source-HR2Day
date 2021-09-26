@@ -5,7 +5,7 @@
 #####################################################
 $VerbosePreference = "Continue"
 
-#Region Functions
+#region functions
 function Get-HR2DayEmployeeData {
     [CmdletBinding()]
     param (
@@ -30,9 +30,11 @@ function Get-HR2DayEmployeeData {
         $WG_Employees,
 
         [bool]
-        $IsConnectionTls12
-    )
+        $IsConnectionTls12,
 
+        [string]
+        $YearRange
+    )
     try {
         if ($IsConnectionTls12) {
             Write-Verbose 'Switching to TLS 1.2'
@@ -53,46 +55,78 @@ function Get-HR2DayEmployeeData {
         Write-Verbose 'Adding Authorization headers'
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $headers.Add("Authorization", "Bearer $($accessToken.access_token)")
-        $splatParams = @{
-            Headers = $headers
-        }
+        $splatParams = @{ Headers = $headers }
 
         Write-Verbose 'Retrieving HR2Day Employees'
         $splatParams['Endpoint']="employee?wg=$WG_Employees"
         $employeeData = Invoke-HR2DayRestMethod @splatParams
 
         Write-Verbose 'Retrieving HR2Day Arbeidsrelaties'
-        $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees"
-        $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
-
-        Write-Verbose 'Combining Employee and Arbeidsrelaties data'
-
-        # Lookup table using a delegate
-        $contractDelegate = [Func[object, object]] { param($contract) $contract.hr2d__Employee__c }
-        $lookup = [Linq.Enumerable]::ToLookup($arbeidsRelatieData, $contractDelegate)
-
-        # Lookup table using native PS Group-Object
-        # $lookup = $arbeidsRelatieData | Group-Object -Property hr2d__Employee__c -AsHashTable
-
-        foreach ($employee in $employeeData){
-
-            # Lookup the contracts for the employee using Linq
-            $arbeidsRelaties = [Linq.Enumerable]::ToArray($lookup[$employee.Id])
-
-            # Lookup the contracts for the employee using native PS
-            # $arbeidsRelaties = $lookup[$employee.Id]
-
-            $arbeidsRelaties.Foreach(
-            {
-                $_ | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $_.Id
-            })
-
-            $employee | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $employee.hr2d__EmplNr__c
-            $employee | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $employee.hr2d__A_name__c
-            $employee | Add-Member -MemberType NoteProperty -Name 'Contracts' -Value $arbeidsRelaties
+        if ($YearRange) {
+            [System.Collections.ArrayList]$resultArray = @()
+            $yearRangeInt = $YearRange -as [int]
+            $startRange = $yearRangeInt
+            $endRange = $yearRangeInt
+            $currentYear = Get-Date
+            ############################################################################################################
+            # Note: the functionallity below is merely an example to show you how paging could be done.
+            #
+            # Since the API does not support paging, we have to do our own paging.
+            # This is achieved by retrieving the arbeidsRelatieData in small yearly batches.
+            # If you provide a YearRange of 5 from the configuration, 5 consecutive API calls will be made.
+            # If the current year is 2021, the first batch contains data from [20160101 - 20170101]. And so on.
+            # The last call in the do/until loop contains the data from [20200101 - 20210101].
+            #
+            # We then have to make one additional call outside the loop to get the data from [20210101 - Now]
+            # where [Now] at this moment is set to; 20211231.
+            ############################################################################################################
+            do {
+                $endRange--
+                $startDateYear = $currentYear.AddYears(-$startRange).ToString("yyyy")
+                $endDateYear = $currentYear.AddYears(-$endRange).ToString("yyyy")
+                $startDate = "$($startDateYear)0101"
+                $endDate = "$($endDateYear)0101"
+                $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
+                $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
+                $resultArray.add($arbeidsRelatieData) | Out-Null
+                $startRange--
+            } until ($startRange -eq 0)
+                $startDate = "$($currentYear.ToString("yyyy"))0101"
+                $endDate = (Get-Date -Month 12 -Day 31).ToString("yyyyMMdd")
+                $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
+                $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
+                $resultArray.add($arbeidsRelatieData) | Out-Null
+        } else {
+            $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees"
+            $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
         }
 
-        Write-Output $employeeData | ConvertTo-Json -Depth 20
+        if ($arbeidsRelatieData -match "JSON_PARSER_ERROR"){
+            throw 'Could not retrieve arbeidsrelatiedata, the result exceeds the limit'
+        } else {
+            Write-Verbose 'Combining Employee and Arbeidsrelaties data'
+            $contractDelegate = [Func[object, object]] {
+                param ($contract) $contract.hr2d__Employee__c
+            }
+            $lookup = [Linq.Enumerable]::ToLookup($arbeidsRelatieData, $contractDelegate)
+
+            [System.Collections.Generic.List[object]]$resultList = @()
+            foreach ($employee in $employeeData){
+                $arbeidsRelaties = [Linq.Enumerable]::ToArray($lookup[$employee.Id])
+                if ($arbeidsRelaties.count -ge 1){
+                    $arbeidsRelaties.Foreach({
+                        $_ | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $_.Id
+                    })
+                    $employee | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $employee.hr2d__EmplNr__c
+                    $employee | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $employee.hr2d__A_name__c
+                    $employee | Add-Member -MemberType NoteProperty -Name 'Contracts' -Value $arbeidsRelaties
+
+                    $resultList.add($employee)
+                }
+            }
+        }
+        Write-Verbose 'Finised retrieving HR2Day employees. Only employees with one ore more contracts are included in the raw data'
+        Write-Output $resultList | ConvertTo-Json -Depth 20
     } catch {
         $ex = $PSItem
         if ( $($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
@@ -103,9 +137,9 @@ function Get-HR2DayEmployeeData {
         }
     }
 }
-#Endregion Functions
+#endregion functions
 
-#Region Helper Functions
+#region helper functions
 function Invoke-HR2DayRestMethod {
     [CmdletBinding()]
     param (
@@ -162,7 +196,7 @@ function Resolve-HTTPError {
         Write-Output "'$($HttpErrorObj.ErrorMessage)', TargetObject: '$($HttpErrorObj.RequestUri), InvocationCommand: '$($HttpErrorObj.MyCommand)"
     }
 }
-#Endregion Helper Functions
+#endregion helper functions
 
 $connectionSettings = $Configuration | ConvertFrom-Json
 $splatParams = @{

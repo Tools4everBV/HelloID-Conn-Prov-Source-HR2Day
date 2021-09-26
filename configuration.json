@@ -70,5 +70,16 @@
       "description": "Enables TLS 1.2. Note that is not necessary when running the connector in the cloud",
       "required": false
     }
+  },
+  {
+    "key": "YearRange",
+    "type": "input",
+    "placeholder": "5",
+    "defaultValue": "",
+    "templateOptions": {
+      "label": "YearRange",
+      "description": "The range of years in single digits e.g. 5, that determines the range for which the contract/workRelations [arbeidsrelaties] are retuned",
+      "required": true
+    }
   }
 ]

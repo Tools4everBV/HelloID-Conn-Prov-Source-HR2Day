@@ -14,6 +14,7 @@
   + [Remarks](#Remarks)
   + [Contents](#Contents)
 - [Setup the connector](Setup-The-Connector)
+- [Change history](Change-history)
 - [Getting help](Getting-help)
 - [HelloID Documentation](HelloID-Docs)
 
@@ -29,9 +30,7 @@ HR2Day is an HR System and provides a set of REST API's that allow you to progra
 
 ## Getting started
 
-The _HelloID-Conn-Prov-Source-HR2Day_ connector is created for both Windows PowerShell 5.1 and PowerShell Core. This means that the connector can be executed in both cloud and on-premises using the HelloID agent. 
-
-> By default, the connector is only suitable to be executed using the cloud. 
+The _HelloID-Conn-Prov-Source-HR2Day_ connector is created for both Windows PowerShell 5.1 and PowerShell Core. This means that the connector can be executed in both cloud and on-premises using the HelloID agent.
 
 > If you want to execute the connector using the HelloID agent, please check section: [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
 
@@ -48,6 +47,9 @@ The following settings are required to connect to the API.
 | WG_Employees | The name of the 'werkgever' or 'employer' for the employees in HR2Day | Yes |
 | WG_Deparments | The name of the 'werkgever' or 'employer' for the departments in HR2Day | Yes |
 | Enable TLS1.2 | Enables TLS 1.2 | No |
+| YearRange | The range of years in single digits e.g. 5, that determines the range for which the contract/workRelations [arbeidsrelaties] are retuned | No |
+
+> The _YearRange_ is used to decrease the dataset send back from HR2Day. Use this setting when the connector displays the error __'Could not retrieve arbeidsrelatiedata, the result exceeds the limit'__
 
 ### Prerequisites
 
@@ -74,9 +76,9 @@ The following settings are required to connect to the API.
 5. Add the folowing line within the _try_ block on line 40
 
 ```powershell
-Import-Module _[c:\temp\PSHR2DayAuth.dll]_ -Force
+Import-Module "c:\temp\PSHR2DayAuth.dll" -Force
 ```
-6. Make sure to adjust the path _c:\temp\PSHR2Day.dll.dll_ and use the folder in where the PSHR2DayAuth files are saved.
+6. Make sure to adjust the path _[c:\temp\PSHR2DayAuth.dll]_ and use the folder in which the PSHR2DayAuth files are saved.
 7. Replace the following lines:
 
 ```powershell
@@ -87,7 +89,6 @@ $form = @{
     client_secret = $clientSecret
     password      = $Password
 }
-# 'Invoke-RestMethod -Form' is only available on PowerShell Core.
 $accessToken = Invoke-RestMethod -Uri 'https://login.salesforce.com/services/oauth2/token' -Method Post -Form $form
 ```
 
@@ -108,7 +109,15 @@ $accessToken = $response | ConvertFrom-Json
 
 - When using the connector on Windows PowerShell 5.1 / The HelloID agent, you will need the PSModule DLL file to authenticate against HR2Day. Please not that the code will have to be changed in order to run on Windows PowerShell 5.1. See section [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
 
-> Enabling TLS 1.2 is not necessary when running the connector in the cloud
+#### TLS1.2
+
+Enabling TLS 1.2 is not necessary when running the connector in the cloud
+
+#### Pagination
+
+Since the API does not support paging, we have to do our own paging. This is achieved by retrieving the arbeidsRelatieData in small yearly batches. If you provide a YearRange of 5 from the configuration, 5 consecutive API calls will be made. If the current year is 2021, the first batch contains data from _[20160101 - 20170101]_. And so on.
+
+The last call in the do/until loop contains the data from _[20200101 - 20210101]_. We then have to make one additional call outside the loop to get the data from _[20210101 - Now]_ where __[Now]__ at this moment, is set to the last day of the current year.
 
 ### Contents
 
@@ -122,6 +131,15 @@ $accessToken = $response | ConvertFrom-Json
 ## Setup the connector
 
 For help setting up a new source connector, please refer to our [documentation](https://docs.helloid.com/hc/en-us/articles/360012388639-How-to-add-a-source-system)
+
+> Make sure to configure the Primary Manager in HelloID to: __From department of primary contract__
+
+## Change history
+
+| File               | Version | Changes                                                      |
+| ------------------ | ------- | ------------------------------------------------------------ |
+| persons.p1         | 1.0.0.3 | - Added YearRange to decrease the dataset<br />- Added Errorhandling to throw when the dataset contains an error<br />- Added logic to include only employees with one or more contracts in the raw data |
+| configuration.json | -       | Updated configuration to accomodate the _YearRange__ |
 
 ## Getting help
 

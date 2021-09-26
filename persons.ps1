@@ -206,5 +206,6 @@ $splatParams = @{
     Password          = $($connectionSettings.Password)
     WG_Employees      = $($connectionSettings.WG_Employees)
     IsConnectionTls12 = $($connectionSettings.IsConnectionTls12)
+    YearRange         = $($connectionSettings.YearRange)
 }
 Get-HR2DayEmployeeData @splatParams

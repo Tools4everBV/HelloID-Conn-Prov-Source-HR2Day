@@ -1,7 +1,7 @@
 #####################################################
 # HelloID-Conn-Prov-Source-HR2Day-Departments
 #
-# Version: 1.0.0.0
+# Version: 1.0.0.1
 #####################################################
 $VerbosePreference = "Continue"
 
@@ -65,7 +65,14 @@ function Get-HR2DayDepartmentData {
             $department | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $department.Name
         }
 
-        Write-Output $departmentData | ConvertTo-Json -Depth 10
+        Write-Verbose 'Importing raw data in HelloID'
+        if (-not ($dryRun -eq $true)){
+            Write-Verbose "[Full import] importing '$($departmentData.count)' departments"
+            Write-Output $departmentData | ConvertTo-Json -Depth 10
+        } else {
+            Write-Verbose "[Preview] importing '$($departmentData[1..2].count)' departments"
+            Write-Output $departmentData[1..2] | ConvertTo-Json -Depth 10
+        }
     } catch {
         $ex = $PSItem
         if ( $($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {

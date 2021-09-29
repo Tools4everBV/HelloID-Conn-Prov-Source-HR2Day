@@ -1,7 +1,7 @@
 #####################################################
 # HelloID-Conn-Prov-Source-HR2Day-Persons
 #
-# Version: 1.0.0.3
+# Version: 1.0.0.4
 #####################################################
 $VerbosePreference = "Continue"
 
@@ -126,7 +126,14 @@ function Get-HR2DayEmployeeData {
             }
         }
         Write-Verbose 'Finised retrieving HR2Day employees. Only employees with one ore more contracts are included in the raw data'
-        Write-Output $resultList | ConvertTo-Json -Depth 20
+        Write-Verbose 'Importing raw data in HelloID'
+        if (-not ($dryRun -eq $true)){
+            Write-Verbose "[Full import] importing '$($resultList.count)' persons"
+            Write-Output $resultList | ConvertTo-Json -Depth 20
+        } else {
+            Write-Verbose "[Preview] importing '$($resultList[1..2].count)' persons"
+            Write-Output $resultList[1..2] | ConvertTo-Json -Depth 20
+        }
     } catch {
         $ex = $PSItem
         if ( $($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {

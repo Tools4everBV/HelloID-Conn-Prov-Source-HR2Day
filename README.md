@@ -136,10 +136,20 @@ For help setting up a new source connector, please refer to our [documentation](
 
 ## Change history
 
-| File               | Version | Changes                                                      |
-| ------------------ | ------- | ------------------------------------------------------------ |
-| persons.p1         | 1.0.0.3 | - Added YearRange to decrease the dataset<br />- Added Errorhandling to throw when the dataset contains an error<br />- Added logic to include only employees with one or more contracts in the raw data |
-| configuration.json | -       | Updated configuration to accomodate the _YearRange__ |
+### persons.ps1 [V1.0.0.4]
+
+- Updated to accommodate a preview (drynRun) import
+
+### persons.ps1 [V1.0.0.3]
+
+- Added YearRange to decrease the dataset
+- Added Errorhandling to throw when the dataset contains an error
+- Added logic to include only employees with one or more contracts in the raw data 
+
+### departments.ps1 [V1.0.0.2]
+
+- Updated to accommodate a preview (drynRun) import
+
 
 ## Getting help
 

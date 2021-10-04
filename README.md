@@ -130,9 +130,9 @@ The last call in the do/until loop contains the data from _[20200101 - 20210101]
 
 ## Setup the connector
 
-For help setting up a new source connector, please refer to our [documentation](https://docs.helloid.com/hc/en-us/articles/360012388639-How-to-add-a-source-system)
-
 > Make sure to configure the Primary Manager in HelloID to: __From department of primary contract__
+
+For help setting up a new source connector, please refer to our [documentation](https://docs.helloid.com/hc/en-us/articles/360012388639-How-to-add-a-source-system)
 
 ## Change history
 

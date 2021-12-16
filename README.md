@@ -43,7 +43,7 @@ The following settings are required to connect to the API.
 | ApiKey | The consumer key. This will be provided by HR2Day | Yes |
 | ApiSecret | The consumer secret. This will be provided by HR2Day | Yes |
 | UserName | The username to connect to the API | Yes |
-| Password | The password belonging to the username | Yes |
+| Password | The password belonging to the username + Plus security code  | Yes |
 | WG_Employees | The name of the 'werkgever' or 'employer' for the employees in HR2Day | Yes |
 | WG_Deparments | The name of the 'werkgever' or 'employer' for the departments in HR2Day | Yes |
 | Enable TLS1.2 | Enables TLS 1.2 | No |
@@ -76,9 +76,9 @@ The following settings are required to connect to the API.
 5. Add the folowing line within the _try_ block on line 40
 
 ```powershell
-Import-Module "c:\temp\PSHR2DayAuth.dll" -Force
+Import-Module "c:\temp\PSHR2Day.dll" -Force
 ```
-6. Make sure to adjust the path _[c:\temp\PSHR2Day.dll]_ and use the folder in which the PSHR2DayAuth files are saved.
+6. Make sure to adjust the path _[c:\temp\PSHR2Day.dll]_ and use the folder in which the PSHR2Day files are saved.
 7. Replace the following lines:
 
 ```powershell

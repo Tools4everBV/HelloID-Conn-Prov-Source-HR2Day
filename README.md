@@ -78,7 +78,7 @@ The following settings are required to connect to the API.
 ```powershell
 Import-Module "c:\temp\PSHR2DayAuth.dll" -Force
 ```
-6. Make sure to adjust the path _[c:\temp\PSHR2DayAuth.dll]_ and use the folder in which the PSHR2DayAuth files are saved.
+6. Make sure to adjust the path _[c:\temp\PSHR2Day.dll]_ and use the folder in which the PSHR2DayAuth files are saved.
 7. Replace the following lines:
 
 ```powershell

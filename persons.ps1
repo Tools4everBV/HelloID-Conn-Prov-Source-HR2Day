@@ -88,14 +88,14 @@ function Get-HR2DayEmployeeData {
                 $endDate = "$($endDateYear)0101"
                 $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
                 $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
-                $resultArray.add($arbeidsRelatieData) | Out-Null
+                $resultArray.AddRange($arbeidsRelatieData) | Out-Null
                 $startRange--
-            } until ($startRange -eq 0)
-                $startDate = "$($currentYear.ToString("yyyy"))0101"
-                $endDate = (Get-Date -Month 12 -Day 31).ToString("yyyyMMdd")
-                $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
-                $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
-                $resultArray.add($arbeidsRelatieData) | Out-Null
+            } until ($startRange -eq -1)
+                # $startDate = "$($currentYear.ToString("yyyy"))0101"
+                # $endDate = (Get-Date -Month 12 -Day 31).ToString("yyyyMMdd")
+                # $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
+                # $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
+                # $resultArray.add($arbeidsRelatieData) | Out-Null
         } else {
             $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees"
             $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
@@ -105,10 +105,12 @@ function Get-HR2DayEmployeeData {
             throw 'Could not retrieve arbeidsrelatiedata, the result exceeds the limit'
         } else {
             Write-Verbose 'Combining Employee and Arbeidsrelaties data'
-            $contractDelegate = [Func[object, object]] {
-                param ($contract) $contract.hr2d__Employee__c
-            }
-            $lookup = [Linq.Enumerable]::ToLookup($arbeidsRelatieData, $contractDelegate)
+            # $contractDelegate = [Func[object, object]] {
+            #     param ($contract) $contract.hr2d__Employee__c
+            # }
+            # $lookup = [Linq.Enumerable]::ToLookup($arbeidsRelatieData, $contractDelegate)
+            $lookup = $resultArray | Group-Object -AsHashTable -Property hr2d__Employee__c
+
 
             [System.Collections.Generic.List[object]]$resultList = @()
             foreach ($employee in $employeeData){

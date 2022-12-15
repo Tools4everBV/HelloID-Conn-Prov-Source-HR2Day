@@ -57,12 +57,17 @@ function Get-HR2DayDepartmentData {
             Headers = $headers
         }
 
+        $splatParams['InstanceUrl'] = "$($accessToken.instance_url)"
+
         Write-Verbose 'Retrieving HR2Day Departments'
         $splatParams['Endpoint']="department?wg=$WG_Departments"
         $departmentData = Invoke-HR2DayRestMethod @splatParams
         foreach ($department in $departmentData){
-            $department | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $department.hr2d__DeptNr__c
-            $department | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $department.Name
+            $department | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $department.Id
+            $department | Add-Member -MemberType NoteProperty -Name 'ShortName'   -Value $department.Name
+            $department | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $department.hr2d__Description__c
+            $department | Add-Member -MemberType NoteProperty -Name 'ManagerExternalId' -Value $department.hr2d__Manager__c
+            $department | Add-Member -MemberType NoteProperty -Name 'ParentExternalId' -Value $department.hr2d__ParentDept__c
         }
 
         Write-Verbose 'Importing raw data in HelloID'
@@ -70,8 +75,8 @@ function Get-HR2DayDepartmentData {
             Write-Verbose "[Full import] importing '$($departmentData.count)' departments"
             Write-Output $departmentData | ConvertTo-Json -Depth 10
         } else {
-            Write-Verbose "[Preview] importing '$($departmentData[1..2].count)' departments"
-            Write-Output $departmentData[1..2] | ConvertTo-Json -Depth 10
+            Write-Verbose "[Preview] importing '$($departmentData[1..10].count)' departments"
+            Write-Output $departmentData[1..10] | ConvertTo-Json -Depth 10
         }
     } catch {
         $ex = $PSItem
@@ -95,15 +100,20 @@ function Invoke-HR2DayRestMethod {
         $Endpoint,
 
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $InstanceUrl,
+
+        [Parameter(Mandatory)]
         [System.Collections.IDictionary]
         $Headers
     )
 
     process {
         try {
-            Write-Verbose "Invoking command '$($MyInvocation.MyCommand)' to endpoint '$Endpoint'"
+            Write-Verbose "Invoking command '$($MyInvocation.MyCommand)' to endpoint '$Endpoint' on url '$InstanceUrl'"
             $splatRestMethodParameters = @{
-                Uri         = "https://eu1.salesforce.com/services/apexrest/hr2d/$Endpoint"
+                Uri         = "$InstanceUrl/services/apexrest/hr2d/$Endpoint"
                 Method      = 'Get'
                 ContentType = 'application/json'
                 Headers     = $Headers

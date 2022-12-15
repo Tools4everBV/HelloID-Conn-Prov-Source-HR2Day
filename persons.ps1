@@ -57,6 +57,8 @@ function Get-HR2DayEmployeeData {
         $headers.Add("Authorization", "Bearer $($accessToken.access_token)")
         $splatParams = @{ Headers = $headers }
 
+        $splatParams['InstanceUrl'] = "$($accessToken.instance_url)"
+
         Write-Verbose 'Retrieving HR2Day Employees'
         $splatParams['Endpoint']="employee?wg=$WG_Employees"
         $employeeData = Invoke-HR2DayRestMethod @splatParams
@@ -105,11 +107,11 @@ function Get-HR2DayEmployeeData {
             throw 'Could not retrieve arbeidsrelatiedata, the result exceeds the limit'
         } else {
             Write-Verbose 'Combining Employee and Arbeidsrelaties data'
-            # $contractDelegate = [Func[object, object]] {
-            #     param ($contract) $contract.hr2d__Employee__c
-            # }
-            # $lookup = [Linq.Enumerable]::ToLookup($arbeidsRelatieData, $contractDelegate)
-            $lookup = $resultArray | Group-Object -AsHashTable -Property hr2d__Employee__c
+            $contractDelegate = [Func[object, object]] {
+                param ($contract) $contract.hr2d__Employee__c
+            }
+            $lookup = [Linq.Enumerable]::ToLookup($arbeidsRelatieData, $contractDelegate)
+            #$lookup = $resultArray | Group-Object -AsHashTable -Property hr2d__Employee__c
 
 
             [System.Collections.Generic.List[object]]$resultList = @()
@@ -118,8 +120,10 @@ function Get-HR2DayEmployeeData {
                 if ($arbeidsRelaties.count -ge 1){
                     $arbeidsRelaties.Foreach({
                         $_ | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $_.Id
+                        $_ | Add-Member -MemberType NoteProperty -Name 'EmployerId' -Value $employee.hr2d__Employer__r.Id
+                        $_ | Add-Member -MemberType NoteProperty -Name 'EmployerName' -Value $employee.hr2d__Employer__r.Name
                     })
-                    $employee | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $employee.hr2d__EmplNr__c
+                    $employee | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $employee.Id
                     $employee | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $employee.hr2d__A_name__c
                     $employee | Add-Member -MemberType NoteProperty -Name 'Contracts' -Value $arbeidsRelaties
 
@@ -158,15 +162,20 @@ function Invoke-HR2DayRestMethod {
         $Endpoint,
 
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $InstanceUrl,
+
+        [Parameter(Mandatory)]
         [System.Collections.IDictionary]
         $Headers
     )
 
     process {
         try {
-            Write-Verbose "Invoking command '$($MyInvocation.MyCommand)' to endpoint '$Endpoint'"
+            Write-Verbose "Invoking command '$($MyInvocation.MyCommand)' to endpoint '$Endpoint' to Url $InstanceUrl"
             $splatRestMethodParameters = @{
-                Uri         = "https://eu1.salesforce.com/services/apexrest/hr2d/$Endpoint"
+                Uri         = "$InstanceUrl/services/apexrest/hr2d/$Endpoint"
                 Method      = 'Get'
                 ContentType = 'application/json'
                 Headers     = $Headers

@@ -63,6 +63,9 @@ function Get-HR2DayEmployeeData {
         $splatParams['Endpoint']="employee?wg=$WG_Employees"
         $employeeData = Invoke-HR2DayRestMethod @splatParams
 
+        $employeeData =  $employeeData | where-object {-not([String]::IsNullOrEmpty($_.hr2d__EmplNr__c))}
+
+
         Write-Verbose 'Retrieving HR2Day Arbeidsrelaties'
         if ($YearRange) {
             [System.Collections.ArrayList]$resultArray = @()
@@ -89,10 +92,13 @@ function Get-HR2DayEmployeeData {
                 $startDate = "$($startDateYear)0101"
                 $endDate = "$($endDateYear)0101"
                 $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
+                Write-Verbose -Verbose $splatParams['Endpoint']
                 $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
                 $resultArray.AddRange($arbeidsRelatieData) | Out-Null
                 $startRange--
             } until ($startRange -eq -1)
+
+            $arbeidsRelatieData = $resultArray
                 # $startDate = "$($currentYear.ToString("yyyy"))0101"
                 # $endDate = (Get-Date -Month 12 -Day 31).ToString("yyyyMMdd")
                 # $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
@@ -107,6 +113,9 @@ function Get-HR2DayEmployeeData {
             throw 'Could not retrieve arbeidsrelatiedata, the result exceeds the limit'
         } else {
             Write-Verbose 'Combining Employee and Arbeidsrelaties data'
+
+            $arbeidsRelatieData = $arbeidsRelatieData | where-object {-not([String]::IsNullOrEmpty($_.hr2d__Employee__c))} | Sort-Object id -Unique
+
             $contractDelegate = [Func[object, object]] {
                 param ($contract) $contract.hr2d__Employee__c
             }

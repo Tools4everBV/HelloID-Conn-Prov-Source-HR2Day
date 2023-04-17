@@ -1,7 +1,7 @@
 #####################################################
 # HelloID-Conn-Prov-Source-HR2Day-Departments
 #
-# Version: 1.0.0.1
+# Version: 1.0.1
 #####################################################
 $VerbosePreference = "Continue"
 
@@ -60,30 +60,43 @@ function Get-HR2DayDepartmentData {
         $splatParams['InstanceUrl'] = "$($accessToken.instance_url)"
 
         Write-Verbose 'Retrieving HR2Day Departments'
-        $splatParams['Endpoint']="department?wg=$WG_Departments"
+        $splatParams['Endpoint'] = "department?wg=$WG_Departments"
         $departmentData = Invoke-HR2DayRestMethod @splatParams
-        foreach ($department in $departmentData){
-            $department | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $department.Id
-            $department | Add-Member -MemberType NoteProperty -Name 'ShortName'   -Value $department.Name
-            $department | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $department.hr2d__Description__c
-            $department | Add-Member -MemberType NoteProperty -Name 'ManagerExternalId' -Value $department.hr2d__Manager__c
-            $department | Add-Member -MemberType NoteProperty -Name 'ParentExternalId' -Value $department.hr2d__ParentDept__c
+
+        foreach ($record in $departmentData) {  
+            $department = [PSCustomObject]@{
+                ExternalId        = $record.Id
+                ShortName         = $record.Name
+                DisplayName       = $record.hr2d__Description__c
+                ManagerExternalId = $record.hr2d__Manager__c
+                ParentExternalId  = $record.hr2d__ParentDept__c
+            }
+            
+            # Sanitize and export the json
+            $department = $department | ConvertTo-Json -Depth 10
+            $department = $department.Replace("._", "__")
+            
+            Write-Output $department
         }
 
+
         Write-Verbose 'Importing raw data in HelloID'
-        if (-not ($dryRun -eq $true)){
+        if (-not ($dryRun -eq $true)) {
             Write-Verbose "[Full import] importing '$($departmentData.count)' departments"
             Write-Output $departmentData | ConvertTo-Json -Depth 10
-        } else {
+        }
+        else {
             Write-Verbose "[Preview] importing '$($departmentData[1..10].count)' departments"
             Write-Output $departmentData[1..10] | ConvertTo-Json -Depth 10
         }
-    } catch {
+    }
+    catch {
         $ex = $PSItem
         if ( $($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
             $errorMessage = Resolve-HTTPError -Error $ex
             Write-Verbose "Could not retrieve HR2Day employees. Error: $errorMessage"
-        } else {
+        }
+        else {
             Write-Verbose "Could not retrieve HR2Day employees. Error: $($ex.Exception.Message)"
         }
     }
@@ -119,7 +132,8 @@ function Invoke-HR2DayRestMethod {
                 Headers     = $Headers
             }
             Invoke-RestMethod @splatRestMethodParameters
-        } catch {
+        }
+        catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }
@@ -142,7 +156,8 @@ function Resolve-HTTPError {
         }
         if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
             $HttpErrorObj['ErrorMessage'] = $ErrorObject.ErrorDetails.Message
-        } elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
+        }
+        elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
             $stream = $ErrorObject.Exception.Response.GetResponseStream()
             $stream.Position = 0
             $streamReader = New-Object System.IO.StreamReader $Stream

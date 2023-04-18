@@ -63,31 +63,42 @@ function Get-HR2DayDepartmentData {
         $splatParams['Endpoint'] = "department?wg=$WG_Departments"
         $departmentData = Invoke-HR2DayRestMethod @splatParams
 
-        foreach ($record in $departmentData) {  
-            $department = [PSCustomObject]@{
-                ExternalId        = $record.Id
-                ShortName         = $record.Name
-                DisplayName       = $record.hr2d__Description__c
-                ManagerExternalId = $record.hr2d__Manager__c
-                ParentExternalId  = $record.hr2d__ParentDept__c
-            }
-            
-            # Sanitize and export the json
-            $department = $department | ConvertTo-Json -Depth 10
-            $department = $department.Replace("._", "__")
-            
-            Write-Output $department
-        }
-
-
         Write-Verbose 'Importing raw data in HelloID'
         if (-not ($dryRun -eq $true)) {
             Write-Verbose "[Full import] importing '$($departmentData.count)' departments"
-            Write-Output $departmentData | ConvertTo-Json -Depth 10
+            foreach ($record in $departmentData) {  
+                $department = [PSCustomObject]@{
+                    ExternalId        = $record.Id
+                    ShortName         = $record.Name
+                    DisplayName       = $record.hr2d__Description__c
+                    ManagerExternalId = $record.hr2d__Manager__c
+                    ParentExternalId  = $record.hr2d__ParentDept__c
+                }
+            
+                # Sanitize and export the json
+                $department = $department | ConvertTo-Json -Depth 10
+                $department = $department.Replace("._", "__")
+            
+                Write-Output $department
+            }
         }
         else {
             Write-Verbose "[Preview] importing '$($departmentData[1..10].count)' departments"
-            Write-Output $departmentData[1..10] | ConvertTo-Json -Depth 10
+            foreach ($record in $departmentData[1..10]) {  
+                $department = [PSCustomObject]@{
+                    ExternalId        = $record.Id
+                    ShortName         = $record.Name
+                    DisplayName       = $record.hr2d__Description__c
+                    ManagerExternalId = $record.hr2d__Manager__c
+                    ParentExternalId  = $record.hr2d__ParentDept__c
+                }
+            
+                # Sanitize and export the json
+                $department = $department | ConvertTo-Json -Depth 10
+                $department = $department.Replace("._", "__")
+            
+                Write-Output $department
+            }
         }
     }
     catch {

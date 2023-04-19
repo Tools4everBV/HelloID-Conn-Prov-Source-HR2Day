@@ -10,19 +10,34 @@
   <img src="https://www.hr2day.com/wp-content/uploads/2019/10/cropped-RGB_hr2day_logo.png">
 </p>
 
+## Versioning
+| Version | Description | Date |
+| - | - | - |
+| 1.0.1   | Hotfix for departments script: only send specific object and no longer all available data | 2023/04/17  |
+| 1.0.0   | Initial release | 2021/06/03  |
+
 ## Table of contents
 
-- [Introduction](#Introduction)
-- [Getting started](#Getting-started)
-  + [Connection settings](#Connection-settings)
-  + [Prerequisites](#Prerequisites)
-  + [Execute the connector using the HelloID Agent](Execute-the-connector-using-the-HelloID-Agent)
-  + [Remarks](#Remarks)
-  + [Contents](#Contents)
-- [Setup the connector](Setup-The-Connector)
-- [Change history](Change-history)
-- [Getting help](Getting-help)
-- [HelloID Documentation](HelloID-Docs)
+- [HelloID-Conn-Prov-Source-HR2Day](#helloid-conn-prov-source-hr2day)
+  - [Versioning](#versioning)
+  - [Table of contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Getting started](#getting-started)
+    - [Connection settings](#connection-settings)
+    - [Prerequisites](#prerequisites)
+      - [When using the connector in conjunction with the HelloID agent](#when-using-the-connector-in-conjunction-with-the-helloid-agent)
+    - [Execute the connector using the HelloID Agent](#execute-the-connector-using-the-helloid-agent)
+    - [Remarks](#remarks)
+      - [TLS1.2](#tls12)
+      - [Pagination](#pagination)
+    - [Contents](#contents)
+  - [Setup the connector](#setup-the-connector)
+  - [Change history](#change-history)
+    - [persons.ps1 \[V1.0.0.4\]](#personsps1-v1004)
+    - [persons.ps1 \[V1.0.0.3\]](#personsps1-v1003)
+    - [departments.ps1 \[V1.0.0.2\]](#departmentsps1-v1002)
+  - [Getting help](#getting-help)
+  - [HelloID Docs](#helloid-docs)
 
 ## Introduction
 

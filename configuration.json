@@ -74,8 +74,7 @@
   {
     "key": "YearRange",
     "type": "input",
-    "placeholder": "5",
-    "defaultValue": "",
+    "defaultValue": "5",
     "templateOptions": {
       "label": "YearRange",
       "description": "The range of years in single digits e.g. 5, that determines the range for which the contract/workRelations [arbeidsrelaties] are retuned",

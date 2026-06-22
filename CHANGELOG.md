@@ -7,7 +7,13 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
 - The way of connecting to the API has been changed to client_credentials
 - Connecting by Username and Password is deleted
+- Connector now supports connection via the agent without the DLL files.
 
+### Deprecated
+- Usage of DLL files to connect to HR2Day by the agent
+
+### Removed
+- bin files for usage by agent
 
 ## [1.0.2] - 22-08-2023
 

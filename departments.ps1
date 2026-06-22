@@ -37,12 +37,12 @@ function Get-HR2DayDepartmentData {
 
         Write-Verbose "Invoking command '$($MyInvocation.MyCommand)'"
         Write-Verbose 'Retrieving HR2Day AccessToken'
-        $form = @{
+        $splatParams = @{
             grant_type    = 'client_credentials'
             client_id     = $ClientID
             client_secret = $clientSecret
         }
-        $accessToken = Invoke-RestMethod -Uri "$($BaseUrl)/services/oauth2/token" -Method Post -Form $form
+        $accessToken = Invoke-RestMethod -Uri "$($BaseUrl)/services/oauth2/token" -Method Post -Body $splatParams
 
         Write-Verbose 'Adding Authorization headers'
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"

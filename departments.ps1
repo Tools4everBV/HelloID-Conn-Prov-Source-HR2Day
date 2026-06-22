@@ -179,8 +179,7 @@ $splatParams = @{
     ClientID          = $($connectionSettings.ClientID)
     ClientSecret      = $($connectionSettings.ClientSecret)
     BaseUrl           = $($connectionSettings.BaseUrl)
-    WG_Employees      = $($connectionSettings.WG_Employees)
+    WG_Departments      = $($connectionSettings.WG_Departments)
     IsConnectionTls12 = $($connectionSettings.IsConnectionTls12)
-    YearRange         = $($connectionSettings.YearRange)
 }
 Get-HR2DayDepartmentData @splatParams

@@ -21,23 +21,12 @@
     }
   },
   {
-    "key": "UserName",
+    "key": "BaseURL",
     "type": "input",
     "defaultValue": "",
     "templateOptions": {
-      "label": "UserName",
-      "description": "The UserName to connect to the API ",
-      "required": true
-    }
-  },
-    {
-    "key": "Password",
-    "type": "input",
-    "defaultValue": "",
-    "templateOptions": {
-      "type": "password",
-      "label": "Password",
-      "description": "The password belonging to the UserName",
+      "label": "BaseUrl",
+      "description": "https://hr2day-<customercode>.my.salesforce.com",
       "required": true
     }
   },

@@ -1,7 +1,7 @@
 #####################################################
 # HelloID-Conn-Prov-Source-HR2Day-Departments
 #
-# Version: 1.0.1
+# Version: 2.0.0
 #####################################################
 $VerbosePreference = "Continue"
 
@@ -19,11 +19,7 @@ function Get-HR2DayDepartmentData {
 
         [Parameter(Mandatory)]
         [string]
-        $UserName,
-
-        [Parameter(Mandatory)]
-        [string]
-        $Password,
+        $BaseUrl,
 
         [Parameter(Mandatory)]
         [string]
@@ -41,14 +37,12 @@ function Get-HR2DayDepartmentData {
 
         Write-Verbose "Invoking command '$($MyInvocation.MyCommand)'"
         Write-Verbose 'Retrieving HR2Day AccessToken'
-        $form = @{
-            grant_type    = 'password'
-            username      = $UserName
+        $splatParams = @{
+            grant_type    = 'client_credentials'
             client_id     = $ClientID
             client_secret = $clientSecret
-            password      = $Password
         }
-        $accessToken = Invoke-RestMethod -Uri 'https://login.salesforce.com/services/oauth2/token' -Method Post -Form $form
+        $accessToken = Invoke-RestMethod -Uri "$($BaseUrl)/services/oauth2/token" -Method Post -Body $splatParams
 
         Write-Verbose 'Adding Authorization headers'
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
@@ -184,8 +178,7 @@ $connectionSettings = $Configuration | ConvertFrom-Json
 $splatParams = @{
     ClientID          = $($connectionSettings.ClientID)
     ClientSecret      = $($connectionSettings.ClientSecret)
-    Username          = $($connectionSettings.UserName)
-    Password          = $($connectionSettings.Password)
+    BaseUrl           = $($connectionSettings.BaseUrl)
     WG_Departments    = $($connectionSettings.WG_Departments)
     IsConnectionTls12 = $($connectionSettings.IsConnectionTls12)
 }

@@ -1,7 +1,7 @@
 #####################################################
 # HelloID-Conn-Prov-Source-HR2Day-Persons
 #
-# Version: 1.0.0.4
+# Version: 2.0.0
 #####################################################
 $VerbosePreference = "Continue"
 
@@ -19,11 +19,7 @@ function Get-HR2DayEmployeeData {
 
         [Parameter(Mandatory)]
         [string]
-        $UserName,
-
-        [Parameter(Mandatory)]
-        [string]
-        $Password,
+        $BaseUrl,
 
         [Parameter(Mandatory)]
         [string]
@@ -43,27 +39,27 @@ function Get-HR2DayEmployeeData {
 
         Write-Verbose "Invoking command '$($MyInvocation.MyCommand)'"
         Write-Verbose 'Retrieving HR2Day AccessToken'
-        $form = @{
-            grant_type    = 'password'
-            username      = $UserName
+        $splatParams = @{
+            grant_type    = 'client_credentials'
             client_id     = $ClientID
             client_secret = $clientSecret
-            password      = $Password
         }
-        $accessToken = Invoke-RestMethod -Uri 'https://login.salesforce.com/services/oauth2/token' -Method Post -Form $form
+        $accessToken = Invoke-RestMethod -Uri "$($BaseUrl)/services/oauth2/token" -Method Post -Body $splatParams
 
         Write-Verbose 'Adding Authorization headers'
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $headers.Add("Authorization", "Bearer $($accessToken.access_token)")
-        $splatParams = @{ Headers = $headers }
+        $splatParams = @{ 
+            Headers = $headers 
+        }
 
         $splatParams['InstanceUrl'] = "$($accessToken.instance_url)"
 
         Write-Verbose 'Retrieving HR2Day Employees'
-        $splatParams['Endpoint']="employee?wg=$WG_Employees"
+        $splatParams['Endpoint'] = "employee?wg=$WG_Employees"
         $employeeData = Invoke-HR2DayRestMethod @splatParams
 
-        $employeeData =  $employeeData | where-object {-not([String]::IsNullOrEmpty($_.hr2d__EmplNr__c))}
+        $employeeData = $employeeData | where-object { -not([String]::IsNullOrEmpty($_.hr2d__EmplNr__c)) }
 
 
         Write-Verbose 'Retrieving HR2Day Arbeidsrelaties'
@@ -90,8 +86,8 @@ function Get-HR2DayEmployeeData {
                 $startDateYear = $currentYear.AddYears(-$startRange).ToString("yyyy")
                 $endDateYear = $currentYear.AddYears(-$endRange).ToString("yyyy")
                 $startDate = "$($startDateYear)0101"
-                $endDate = "$($endDateYear)0101"
-                $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
+                $endDate = "$($endDateYear)0701"
+                $splatParams['Endpoint'] = "arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
                 Write-Verbose -Verbose $splatParams['Endpoint']
                 $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
                 $resultArray.AddRange($arbeidsRelatieData) | Out-Null
@@ -99,22 +95,24 @@ function Get-HR2DayEmployeeData {
             } until ($startRange -eq -1)
 
             $arbeidsRelatieData = $resultArray
-                # $startDate = "$($currentYear.ToString("yyyy"))0101"
-                # $endDate = (Get-Date -Month 12 -Day 31).ToString("yyyyMMdd")
-                # $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
-                # $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
-                # $resultArray.add($arbeidsRelatieData) | Out-Null
-        } else {
-            $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees"
+            # $startDate = "$($currentYear.ToString("yyyy"))0101"
+            # $endDate = (Get-Date -Month 12 -Day 31).ToString("yyyyMMdd")
+            # $splatParams['Endpoint']="arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
+            # $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
+            # $resultArray.add($arbeidsRelatieData) | Out-Null
+        }
+        else {
+            $splatParams['Endpoint'] = "arbeidsrelatie?wg=$WG_Employees"
             $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams
         }
 
-        if ($arbeidsRelatieData -match "JSON_PARSER_ERROR"){
+        if ($arbeidsRelatieData -match "JSON_PARSER_ERROR") {
             throw 'Could not retrieve arbeidsrelatiedata, the result exceeds the limit'
-        } else {
+        }
+        else {
             Write-Verbose 'Combining Employee and Arbeidsrelaties data'
 
-            $arbeidsRelatieData = $arbeidsRelatieData | where-object {-not([String]::IsNullOrEmpty($_.hr2d__Employee__c))} | Sort-Object id -Unique
+            $arbeidsRelatieData = $arbeidsRelatieData | where-object { -not([String]::IsNullOrEmpty($_.hr2d__Employee__c)) } | Sort-Object id -Unique
 
             $contractDelegate = [Func[object, object]] {
                 param ($contract) $contract.hr2d__Employee__c
@@ -124,14 +122,14 @@ function Get-HR2DayEmployeeData {
 
 
             [System.Collections.Generic.List[object]]$resultList = @()
-            foreach ($employee in $employeeData){
+            foreach ($employee in $employeeData) {
                 $arbeidsRelaties = [Linq.Enumerable]::ToArray($lookup[$employee.Id])
-                if ($arbeidsRelaties.count -ge 1){
+                if ($arbeidsRelaties.count -ge 1) {
                     $arbeidsRelaties.Foreach({
-                        $_ | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $_.Id
-                        $_ | Add-Member -MemberType NoteProperty -Name 'EmployerId' -Value $employee.hr2d__Employer__r.Id
-                        $_ | Add-Member -MemberType NoteProperty -Name 'EmployerName' -Value $employee.hr2d__Employer__r.Name
-                    })
+                            $_ | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $_.Id
+                            $_ | Add-Member -MemberType NoteProperty -Name 'EmployerId' -Value $employee.hr2d__Employer__r.Id
+                            $_ | Add-Member -MemberType NoteProperty -Name 'EmployerName' -Value $employee.hr2d__Employer__r.Name
+                        })
                     $employee | Add-Member -MemberType NoteProperty -Name 'ExternalId' -Value $employee.Id
                     $employee | Add-Member -MemberType NoteProperty -Name 'DisplayName' -Value $employee.hr2d__A_name__c
                     $employee | Add-Member -MemberType NoteProperty -Name 'Contracts' -Value $arbeidsRelaties
@@ -142,19 +140,22 @@ function Get-HR2DayEmployeeData {
         }
         Write-Verbose 'Finised retrieving HR2Day employees. Only employees with one ore more contracts are included in the raw data'
         Write-Verbose 'Importing raw data in HelloID'
-        if (-not ($dryRun -eq $true)){
+        if (-not ($dryRun -eq $true)) {
             Write-Verbose "[Full import] importing '$($resultList.count)' persons"
             Write-Output $resultList | ConvertTo-Json -Depth 20
-        } else {
+        }
+        else {
             Write-Verbose "[Preview] importing '$($resultList[1..2].count)' persons"
             Write-Output $resultList[1..2] | ConvertTo-Json -Depth 20
         }
-    } catch {
+    }
+    catch {
         $ex = $PSItem
         if ( $($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
             $errorMessage = Resolve-HTTPError -Error $ex
             Write-Verbose "Could not retrieve HR2Day employees. Error: $errorMessage"
-        } else {
+        }
+        else {
             Write-Verbose "Could not retrieve HR2Day employees. Error: $($ex.Exception.Message)"
         }
     }
@@ -190,7 +191,8 @@ function Invoke-HR2DayRestMethod {
                 Headers     = $Headers
             }
             Invoke-RestMethod @splatRestMethodParameters
-        } catch {
+        }
+        catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }
@@ -213,7 +215,8 @@ function Resolve-HTTPError {
         }
         if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
             $HttpErrorObj['ErrorMessage'] = $ErrorObject.ErrorDetails.Message
-        } elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
+        }
+        elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
             $stream = $ErrorObject.Exception.Response.GetResponseStream()
             $stream.Position = 0
             $streamReader = New-Object System.IO.StreamReader $Stream
@@ -229,10 +232,10 @@ $connectionSettings = $Configuration | ConvertFrom-Json
 $splatParams = @{
     ClientID          = $($connectionSettings.ClientID)
     ClientSecret      = $($connectionSettings.ClientSecret)
-    Username          = $($connectionSettings.UserName)
-    Password          = $($connectionSettings.Password)
+    BaseUrl           = $($connectionSettings.BaseUrl)
     WG_Employees      = $($connectionSettings.WG_Employees)
     IsConnectionTls12 = $($connectionSettings.IsConnectionTls12)
     YearRange         = $($connectionSettings.YearRange)
 }
+
 Get-HR2DayEmployeeData @splatParams

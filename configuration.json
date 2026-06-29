@@ -26,7 +26,7 @@
     "defaultValue": "",
     "templateOptions": {
       "label": "BaseUrl",
-      "description": "The URL to connect to the API ",
+      "description": "https://hr2day-<customercode>.my.salesforce.com",
       "required": true
     }
   },

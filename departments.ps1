@@ -1,7 +1,7 @@
 #####################################################
 # HelloID-Conn-Prov-Source-HR2Day-Departments
 #
-# Version: 1.0.3
+# Version: 2.0.0
 #####################################################
 $VerbosePreference = "Continue"
 
@@ -179,7 +179,7 @@ $splatParams = @{
     ClientID          = $($connectionSettings.ClientID)
     ClientSecret      = $($connectionSettings.ClientSecret)
     BaseUrl           = $($connectionSettings.BaseUrl)
-    WG_Departments      = $($connectionSettings.WG_Departments)
+    WG_Departments    = $($connectionSettings.WG_Departments)
     IsConnectionTls12 = $($connectionSettings.IsConnectionTls12)
 }
 Get-HR2DayDepartmentData @splatParams

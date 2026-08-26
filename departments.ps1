@@ -42,7 +42,7 @@ function Get-HR2DayDepartmentData {
             client_id     = $ClientID
             client_secret = $clientSecret
         }
-        $accessToken = Invoke-RestMethod -Uri "$($BaseUrl)" -Method Post -form $splatParams
+        $accessToken = Invoke-RestMethod -Uri "$($BaseUrl)/services/oauth2/token" -Method Post -form $splatParams
 
 
         Write-Verbose 'Adding Authorization headers'

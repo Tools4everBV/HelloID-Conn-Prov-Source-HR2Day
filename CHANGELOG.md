@@ -6,8 +6,6 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Fixed
 - Use correct auth url for departments script
-- Connecting by Username and Password is deleted
-- Connector now supports connection via the agent without the DLL files.
 
 ## [2.0.0] - 22-06-2026
 

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com), and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [2.0.1] - 26-08-2026
+
+### Fixed
+- Use correct auth url for departments script
+- Connecting by Username and Password is deleted
+- Connector now supports connection via the agent without the DLL files.
+
 ## [2.0.0] - 22-06-2026
 
 ### Changed

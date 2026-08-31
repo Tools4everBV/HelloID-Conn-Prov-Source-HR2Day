@@ -86,7 +86,7 @@ function Get-HR2DayEmployeeData {
                 $startDateYear = $currentYear.AddYears(-$startRange).ToString("yyyy")
                 $endDateYear = $currentYear.AddYears(-$endRange).ToString("yyyy")
                 $startDate = "$($startDateYear)0101"
-                $endDate = "$($endDateYear)0701"
+                $endDate = "$($endDateYear)0101"
                 $splatParams['Endpoint'] = "arbeidsrelatie?wg=$WG_Employees&dateFrom=$startDate&dateTo=$endDate"
                 Write-Verbose -Verbose $splatParams['Endpoint']
                 $arbeidsRelatieData = Invoke-HR2DayRestMethod @splatParams

@@ -229,13 +229,17 @@ function Resolve-HTTPError {
 #endregion helper functions
 
 $connectionSettings = $Configuration | ConvertFrom-Json
+$wgEmployeeArray = $($connectionSettings.WG_Employees).split(",").trim()
+
+foreach($wgEmployee in $wgEmployeeArray){
 $splatParams = @{
     ClientID          = $($connectionSettings.ClientID)
     ClientSecret      = $($connectionSettings.ClientSecret)
     BaseUrl           = $($connectionSettings.BaseUrl)
-    WG_Employees      = $($connectionSettings.WG_Employees)
+    WG_Employees      = $wgEmployee
     IsConnectionTls12 = $($connectionSettings.IsConnectionTls12)
     YearRange         = $($connectionSettings.YearRange)
 }
 
 Get-HR2DayEmployeeData @splatParams
+}

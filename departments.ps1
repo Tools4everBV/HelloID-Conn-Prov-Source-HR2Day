@@ -176,11 +176,15 @@ function Resolve-HTTPError {
 #Endregion Helper Functions
 
 $connectionSettings = $Configuration | ConvertFrom-Json
+$wgDepartmentArray = $($connectionSettings.WG_Departments).split(",").trim()
+
+foreach($wgDepartment in $wgDepartmentArray){
 $splatParams = @{
     ClientID          = $($connectionSettings.ClientID)
     ClientSecret      = $($connectionSettings.ClientSecret)
     BaseUrl           = $($connectionSettings.BaseUrl)
-    WG_Departments    = $($connectionSettings.WG_Departments)
+    WG_Departments    = $wgDepartment
     IsConnectionTls12 = $($connectionSettings.IsConnectionTls12)
 }
 Get-HR2DayDepartmentData @splatParams
+}
